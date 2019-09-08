@@ -1,0 +1,332 @@
+---
+title: "ZSR world records"
+author: "Nathan Esau"
+date: "December 11, 2015"
+output: html_document
+---
+
+# Introduction
+
+This document contains interactive plots, showing the world records at each point in time starting some time in 2012 to now. It isn't possible to know what the earliest world record was at this time from zelda speedruns, meaning that the first few points in each plot may not be accurate. 
+
+There were a total of 1937 players who have submitted a time to Zelda Speed Runs (ZSR) leaderboards as of December 11, 2015. Meme categories present on ZSR, such as King Zora Day 2015 are not shown.
+
+# World Records 
+
+```{r setup, include=FALSE}
+load("~/Documents/GitHub/ZSR_lb_data/Data/category_data.Rdata")
+
+library(BBmisc) # for sorting
+library(plotly) # for interactive plots
+
+plot_names <- ls()
+get_wr <- function(df, wr_threshold=20) {
+  df$Date <- as.Date(df$Date, format="%m/%d/%Y")
+  df$Time <- as.character(df$Time)
+  hms <- lapply(strsplit(df$Time, split=":"), as.numeric)
+  df$min <- unlist(lapply(hms,function(x)x[1]*60+x[2]+x[3]/60))
+  
+  # Player Time Version Date
+  # assume for now that last row is initial wr at that date
+  # this means that the early time series won't be necessarily reliable 
+  df <- sortByCol(df, c("Date"), asc = c(TRUE))
+  df$WR <- 0
+  df$WR[1] <- 1
+  wr <- df$min[1]
+  
+  if(length(df$min)>1) {
+  for(i in 2:length(df$min)) {
+    if(df$min[i] <= wr) {
+      df$WR[i] <- 1
+      wr <- df$min[i]
+    }
+  }}
+  
+  # only times which were WR
+  df_wr <- unique(df[which(df$WR==1),1:5])
+  # remove initial rows which probably weren't wr
+  legit_wr <- FALSE
+  i <- 1
+  while(legit_wr == FALSE && i < nrow(df_wr)) {
+    if( (df_wr$min[i] - df_wr$min[i+1]) > 20) { # 20 min threshold
+      df_wr <- df_wr[-i,]
+    } else {
+      legit_wr == TRUE
+    }
+    i <- i + 1
+  }
+  df_wr
+}
+
+plot_wr <- function(df, wr_threshold=20, title=NA) {
+  wr <- get_wr(df, wr_threshold = wr_threshold)
+  names(wr) <- c("Player", "Time", "Version", "Date", "Minutes")
+  labels <- paste0(wr$Player, " (", wr$Version, ")")
+  p <- plot_ly(wr, x=Date, y=Minutes, 
+               text=labels, mode="lines+markers")
+  if(!is.na(title)) {
+    p <- layout(p, title=title)
+  }
+  p
+}
+```
+
+```{r, plot_albw_100}
+plot_wr(`albw_100`,title="albw_100")
+```
+
+```{r, plot_albw_any}
+plot_wr(`albw_any`,title="albw_any")
+```
+
+```{r, plot_albw_glitchless}
+plot_wr(`albw_glitchless`,title="albw_glitchless")
+```
+
+```{r, plot_alttp_100}
+plot_wr(`alttp_100`,title="alttp_100")
+```
+
+```{r, plot_alttp_all-dungeons}
+plot_wr(`alttp_all-dungeons`,title="alttp_all-dungeons")
+```
+
+```{r, plot_alttp_any}
+plot_wr(`alttp_any`,title="alttp_any")
+```
+
+```{r, plot_alttp_no-eg}
+plot_wr(`alttp_no-eg`,title="alttp_no-eg")
+```
+
+```{r, plot_alttp_no-major-glitches}
+plot_wr(`alttp_no-major-glitches`,title="alttp_no-major-glitches")
+```
+
+```{r, plot_alttp_no-oob}
+plot_wr(`alttp_no-oob`,title="alttp_no-oob")
+```
+
+```{r, plot_aol_100-all-keys}
+plot_wr(`aol_100-all-keys`,title="aol_100-all-keys")
+```
+
+```{r, plot_aol_100-deathless}
+plot_wr(`aol_100-deathless`,title="aol_100-deathless")
+```
+
+```{r, plot_aol_any}
+plot_wr(`aol_any`,title="aol_any")
+```
+
+```{r, plot_aol_deathless}
+plot_wr(`aol_deathless`,title="aol_deathless")
+```
+
+```{r, plot_fsa_any}
+plot_wr(`fsa_any`,title="fsa_any")
+```
+
+```{r, plot_la_any}
+plot_wr(`la_any`,title="la_any")
+```
+
+```{r, plot_ladx_100}
+plot_wr(`ladx_100`,title="ladx_100")
+```
+
+```{r, plot_ladx_allinstruments}
+plot_wr(`ladx_allinstruments`,title="ladx_allinstruments")
+```
+
+```{r, plot_ladx_any}
+plot_wr(`ladx_any`,title="ladx_any")
+```
+
+```{r, plot_ladx_no-sq}
+plot_wr(`ladx_no-sq`,title="ladx_no-sq")
+```
+
+```{r, plot_ladx_no-ww-oob}
+plot_wr(`ladx_no-ww-oob`,title="ladx_no-ww-oob")
+```
+
+```{r, plot_la_warpless}
+plot_wr(`la_warpless`,title="la_warpless")
+```
+
+```{r, plot_loz_1st-quest}
+plot_wr(`loz_1st-quest`,title="loz_1st-quest")
+```
+
+```{r, plot_loz_2nd-quest}
+plot_wr(`loz_2nd-quest`,title="loz_2nd-quest")
+```
+
+```{r, plot_mm_100}
+plot_wr(`mm_100`,title="mm_100")
+```
+
+```{r, plot_mm3d_100}
+plot_wr(`mm3d_100`,title="mm3d_100")
+```
+
+```{r, plot_mm3d_allmasks}
+plot_wr(`mm3d_allmasks`,title="mm3d_allmasks")
+```
+
+```{r, plot_mm3d_any}
+plot_wr(`mm3d_any`,title="mm3d_any")
+```
+
+```{r, plot_mm_allmasks}
+plot_wr(`mm_allmasks`,title="mm_allmasks")
+```
+
+```{r, plot_mm_any}
+plot_wr(`mm_any`,title="mm_any")
+```
+
+```{r, plot_mm_glitchless}
+plot_wr(`mm_glitchless`,title="mm_glitchless")
+```
+
+```{r, plot_ooa_any}
+plot_wr(`ooa_any`,title="ooa_any")
+```
+
+```{r, plot_oos_any}
+plot_wr(`oos_any`,title="oos_any")
+```
+
+```{r, plot_oot_100}
+plot_wr(`oot_100`,title="oot_100")
+```
+
+```{r, plot_oot3d_100}
+plot_wr(`oot3d_100`,title="oot3d_100")
+```
+
+```{r, plot_oot3d_any}
+plot_wr(`oot3d_any`,title="oot3d_any")
+```
+
+```{r, plot_oot3d_any-ngp}
+plot_wr(`oot3d_any-ngp`,title="oot3d_any-ngp")
+```
+
+```{r, plot_oot3d_mst}
+plot_wr(`oot3d_mst`,title="oot3d_mst")
+```
+
+```{r, plot_oot_all-dungeons}
+plot_wr(`oot_all-dungeons`,title="oot_all-dungeons")
+```
+
+```{r, plot_oot_any}
+plot_wr(`oot_any`,title="oot_any")
+```
+
+```{r, plot_oot_ganonless}
+plot_wr(`oot_ganonless`,title="oot_ganonless")
+```
+
+```{r, plot_oot_glitchless}
+plot_wr(`oot_glitchless`,title="oot_glitchless")
+```
+
+```{r, plot_oot_glitchless100}
+plot_wr(`oot_glitchless100`,title="oot_glitchless100")
+```
+
+```{r, plot_ootmq_100}
+plot_wr(`ootmq_100`,title="ootmq_100")
+```
+
+```{r, plot_ootmq_ad}
+plot_wr(`ootmq_ad`,title="ootmq_ad")
+```
+
+```{r, plot_ootmq_no-rba-no-ww}
+plot_wr(`ootmq_no-rba-no-ww`,title="ootmq_no-rba-no-ww")
+```
+
+```{r, plot_oot_mst}
+plot_wr(`oot_mst`,title="oot_mst")
+```
+
+```{r, plot_oot_no-rba-no-ww}
+plot_wr(`oot_no-rba-no-ww`,title="oot_no-rba-no-ww")
+```
+
+```{r, plot_oot_no-rba-no-ww-new}
+plot_wr(`oot_no-rba-no-ww-new`,title="oot_no-rba-no-ww-new")
+```
+
+```{r, plot_oot_no-ww}
+plot_wr(`oot_no-ww`,title="oot_no-ww")
+```
+
+```{r, plot_ph_any}
+plot_wr(`ph_any`,title="ph_any")
+```
+
+```{r, plot_ss_100}
+plot_wr(`ss_100`,title="ss_100")
+```
+
+```{r, plot_ss_any}
+plot_wr(`ss_any`,title="ss_any")
+```
+
+```{r, plot_st_any}
+plot_wr(`st_any`,title="st_any")
+```
+
+```{r, plot_tmc_100}
+plot_wr(`tmc_100`,title="tmc_100")
+```
+
+```{r, plot_tmc_any}
+plot_wr(`tmc_any`,title="tmc_any")
+```
+
+```{r, plot_tp_100}
+plot_wr(`tp_100`,title="tp_100")
+```
+
+```{r, plot_tp_alldungeons}
+plot_wr(`tp_alldungeons`,title="tp_alldungeons")
+```
+
+```{r, plot_tp_any}
+plot_wr(`tp_any`,title="tp_any")
+```
+
+```{r, plot_tp_any-no-sq}
+plot_wr(`tp_any-no-sq`,title="tp_any-no-sq")
+```
+
+```{r, plot_tww_100}
+plot_wr(`tww_100`,title="tww_100")
+```
+
+```{r, plot_tww_any}
+plot_wr(`tww_any`,title="tww_any")
+```
+
+```{r, plot_tww_glitchless}
+plot_wr(`tww_glitchless`,title="tww_glitchless")
+```
+
+```{r, plot_twwhd_100}
+plot_wr(`twwhd_100`,title="twwhd_100")
+```
+
+```{r, plot_twwhd_any}
+plot_wr(`twwhd_any`,title="twwhd_any")
+```
+
+```{r, plot_twwhd_glitchless}
+plot_wr(`twwhd_glitchless`,title="twwhd_glitchless")
+```

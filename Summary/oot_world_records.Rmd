@@ -1,0 +1,96 @@
+---
+title: "ZSR world records"
+author: "Nathan Esau"
+date: "December 11, 2015"
+output: html_document
+---
+
+# Introduction
+
+This document contains interactive plots, showing the world records at each point in time starting some time in 2012 to now. It isn't possible to know what the earliest world record was at this time from zelda speedruns, meaning that the first few points in each plot may not be accurate. 
+
+There were a total of 1937 players who have submitted a time to Zelda Speed Runs (ZSR) leaderboards as of December 11, 2015. Meme categories present on ZSR, such as King Zora Day 2015 are not shown.
+
+# World Records 
+
+```{r setup, include=FALSE}
+load("~/Documents/GitHub/ZSR_lb_data/Data/category_data.Rdata")
+
+library(BBmisc) # for sorting
+library(plotly) # for interactive plots
+
+plot_names <- ls()
+get_wr <- function(df, wr_threshold=20) {
+  df$Date <- as.Date(df$Date, format="%m/%d/%Y")
+  df$Time <- as.character(df$Time)
+  hms <- lapply(strsplit(df$Time, split=":"), as.numeric)
+  df$min <- unlist(lapply(hms,function(x)x[1]*60+x[2]+x[3]/60))
+  
+  # Player Time Version Date
+  # assume for now that last row is initial wr at that date
+  # this means that the early time series won't be necessarily reliable 
+  df <- sortByCol(df, c("Date"), asc = c(TRUE))
+  df$WR <- 0
+  df$WR[1] <- 1
+  wr <- df$min[1]
+  
+  if(length(df$min)>1) {
+  for(i in 2:length(df$min)) {
+    if(df$min[i] <= wr) {
+      df$WR[i] <- 1
+      wr <- df$min[i]
+    }
+  }}
+  
+  # only times which were WR
+  df_wr <- unique(df[which(df$WR==1),1:5])
+  # remove initial rows which probably weren't wr
+  legit_wr <- FALSE
+  i <- 1
+  while(legit_wr == FALSE && i < nrow(df_wr)) {
+    if( (df_wr$min[i] - df_wr$min[i+1]) > 20) { # 20 min threshold
+      df_wr <- df_wr[-i,]
+    } else {
+      legit_wr == TRUE
+    }
+    i <- i + 1
+  }
+  df_wr
+}
+
+plot_wr <- function(df, wr_threshold=20, title=NA) {
+  wr <- get_wr(df, wr_threshold = wr_threshold)
+  names(wr) <- c("Player", "Time", "Version", "Date", "Minutes")
+  labels <- paste0(wr$Player, " (", wr$Version, ")")
+  p <- plot_ly(wr, x=Date, y=Minutes, 
+               text=labels, mode="lines+markers")
+  if(!is.na(title)) {
+    p <- layout(p, title=title)
+  }
+  p
+}
+```
+
+```{r, plot_oot_100}
+plot_wr(`oot_100`,title="oot_100")
+```
+
+```{r, plot_oot_all-dungeons}
+plot_wr(`oot_all-dungeons`,title="oot_all-dungeons")
+```
+
+```{r, plot_oot_any}
+plot_wr(`oot_any`,title="oot_any")
+```
+
+```{r, plot_oot_ganonless}
+plot_wr(`oot_ganonless`,title="oot_ganonless")
+```
+
+```{r, plot_oot_glitchless}
+plot_wr(`oot_glitchless`,title="oot_glitchless")
+```
+
+```{r, plot_oot_mst}
+plot_wr(`oot_mst`,title="oot_mst")
+```
